@@ -1,0 +1,36 @@
+{
+  "name": "rw-data",
+  "version": "1.0.0",
+  "author": "Lasse Zuengel <stu226842@mail.uni-kiel.de>",
+  "synopsis": "A tool to generate read and write operations for a compact data representation",
+  "category": [ "Programming", "Data" ],
+  "license": "BSD-3-Clause",
+  "licenseFile": "LICENSE",
+  "dependencies": {
+      "base"          : ">= 3.2.0, < 4.0.0",
+      "abstract-curry": ">= 3.0.0, < 4.0.0",
+      "containers"    : ">= 3.0.0, < 4.0.0",
+      "currypath"     : ">= 3.0.0, < 4.0.0",
+      "filepath"      : ">= 3.0.0, < 4.0.0",
+      "flatcurry"     : ">= 3.0.0, < 4.0.0",
+      "process"       : ">= 3.0.0, < 4.0.0",
+      "profiling"     : ">= 3.0.0, < 4.0.0"
+  },
+  "exportedModules": [ "RW.Base" ],
+  "description": 
+    "This package implements a compact and fast data term representation, used to write data to files and read data from files. Furthermore, this package contains a tool which automatically generates read and write operations for all type declarations within the supplied module(s).",
+  "executables": [
+    {
+      "name": "curry-rw-data",
+      "main": "RW.Tool"
+    }
+  ],
+  "testsuite" : {
+    "src-dir": "tests",
+    "modules": ["GenerateRW", "TypeIO.Tests", "Handle.Tests", "MyFlatCurry.Tests", "Peano.Tests"]
+  },
+  "source": {
+    "git": "https://github.com/curry-packages/rw-data.git",
+    "tag": "$version"
+  }
+}
