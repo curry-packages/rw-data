@@ -1,7 +1,8 @@
 ------------------------------------------------------------------------------
 --- This library defines the class `ReadWrite` which is the basis to define
 --- compact data representations for various types.
---- Furthermore, instances of this class are defined for various standard types.
+--- Furthermore, instances of this class are defined for various standard types
+--- defined in the prelude.
 ---
 --- @author Lasse Züngel
 --- @version June 2024
@@ -21,6 +22,8 @@ import Text.Show
 import Prelude hiding (ShowS, showString, showChar, shows)
 
 import RW.Trie 
+
+------------------------------------------------------------------------------
 
 --- The class `ReadWrite` contains the interface to be implemented
 --- by compact readers and writers of data.
@@ -53,6 +56,9 @@ class ReadWrite a where
   writeListRW params h (x : xs) strs =
     hPutStr h "1" >> writeRW params h x strs >>= writeListRW params h xs
 
+------------------------------------------------------------------------------
+-- `ReadtWrite` instances of prelude types.
+
 instance ReadWrite Int where
   readRW _ cs = (readInt n,r)
     where
@@ -74,18 +80,6 @@ instance ReadWrite Float where
   writeRW _ h n strs = do hPutStr h (show n ++ ";") >> return strs
 
   typeOf _ = monoRWType "Float"
-
-instance ReadWrite a => ReadWrite [a] where
-  readRW = readListRW
-
-  showRW = showListRW
-
-  writeRW = writeListRW
-
-  typeOf n = RWType "[]" [typeOf $ get_a' n]
-    where
-      get_a' :: [a'] -> a'
-      get_a' _ = failed 
 
 instance ReadWrite Char where
   readRW _ (c : cs)
@@ -127,6 +121,100 @@ instance ReadWrite Char where
 
   typeOf _ = monoRWType "Char"
 
+
+instance ReadWrite Bool where
+  readRW strs ('0' : r0) = (False,r0)
+  readRW strs ('1' : r0) = (True,r0)
+
+  showRW params strs0 False = (strs0,showChar '0')
+  showRW params strs0 True = (strs0,showChar '1')
+
+  writeRW params h False strs = hPutChar h '0' >> return strs
+  writeRW params h True strs = hPutChar h '1' >> return strs
+
+  typeOf _ = monoRWType "Bool"
+
+-- `ReadWrite` instance for polymorphic lists.
+instance ReadWrite a => ReadWrite [a] where
+  readRW = readListRW
+
+  showRW = showListRW
+
+  writeRW = writeListRW
+
+  typeOf n = RWType "[]" [typeOf $ get_a' n]
+    where
+      get_a' :: [a'] -> a'
+      get_a' _ = failed 
+
+
+--- `ReadWrite` instance for `Either` types.
+instance (ReadWrite a,ReadWrite b) => ReadWrite (Either a b) where
+  readRW strs ('0' : r0) = (Left a',r1)
+    where
+      (a',r1) = readRW strs r0
+  readRW strs ('1' : r0) = (Right a',r1)
+    where
+      (a',r1) = readRW strs r0
+
+  showRW params strs0 (Left a') = (strs1,showChar '0' . show1)
+    where
+      (strs1,show1) = showRW params strs0 a'
+  showRW params strs0 (Right a') = (strs1,showChar '1' . show1)
+    where
+      (strs1,show1) = showRW params strs0 a'
+
+  writeRW params h (Left a') strs = hPutChar h '0' >> writeRW params h a' strs
+  writeRW params h (Right a') strs =
+    hPutChar h '1' >> writeRW params h a' strs
+
+  typeOf n = RWType "Either" [typeOf (get_a n),typeOf (get_b n)]
+    where
+      get_a :: Either a' b' -> a'
+      get_a _ = failed
+      get_b :: Either a' b' -> b'
+      get_b _ = failed
+
+
+--- `ReadWrite` instance for `Maybe` types.
+instance ReadWrite a => ReadWrite (Maybe a) where
+  readRW strs ('0' : r0) = (Nothing,r0)
+  readRW strs ('1' : r0) = (Just a',r1)
+    where
+      (a',r1) = readRW strs r0
+
+  showRW params strs0 Nothing = (strs0,showChar '0')
+  showRW params strs0 (Just a') = (strs1,showChar '1' . show1)
+    where
+      (strs1,show1) = showRW params strs0 a'
+
+  writeRW params h Nothing strs = hPutChar h '0' >> return strs
+  writeRW params h (Just a') strs = hPutChar h '1' >> writeRW params h a' strs
+
+  typeOf n = RWType "Maybe" [typeOf (get_a n)]
+    where
+      get_a :: Maybe a' -> a'
+      get_a _ = failed
+
+
+--- `ReadWrite` instance for type `Ordering`.
+instance ReadWrite Ordering where
+  readRW strs ('0' : r0) = (LT,r0)
+  readRW strs ('1' : r0) = (EQ,r0)
+  readRW strs ('2' : r0) = (GT,r0)
+
+  showRW params strs0 LT = (strs0,showChar '0')
+  showRW params strs0 EQ = (strs0,showChar '1')
+  showRW params strs0 GT = (strs0,showChar '2')
+
+  writeRW params h LT strs = hPutChar h '0' >> return strs
+  writeRW params h EQ strs = hPutChar h '1' >> return strs
+  writeRW params h GT strs = hPutChar h '2' >> return strs
+
+  typeOf _ = monoRWType "Ordering"
+
+
+--- `ReadWrite` instance for unit type.
 instance ReadWrite () where
   readRW _ cs = ((),cs)
 
