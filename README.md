@@ -4,8 +4,8 @@ rw-data
 This package contains an implementation of a compact data term representation
 which can be used to write data to files and read data from files
 faster compared to the standard instances of `Show` and `Read`.
-Furthermore, this package contains a tool `curry-rw-data` to
-generate read and write operations for all type declarations
+Furthermore, the accompanying package `rw-data-generator` contains a tool
+`curry-rw-data` to generate read and write operations for all types
 defined in a given module. For this purpose, the tool
 generates instances of the class `ReadWrite` (see module `RW.Base`)
 for the given type declarations.
@@ -22,7 +22,8 @@ Usage
 -----
 
 If the module `Mod` contains definitions of data types,
-the command
+the command (see package `rw-data-generator` to generate
+the executable)
 
     > curry-rw-data Mod
 

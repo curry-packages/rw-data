@@ -363,8 +363,10 @@ intToASCII lc n
 
 --- Shows a string. 
 --- 
---- If the string is long, it is extracted and represented only once. Otherwise, it is inlined.
-writeString :: RWParameters  -> Trie String -> String -> (Trie String,String -> String)
+--- If the string is long, it is extracted and represented only once.
+--- Otherwise, it is inlined.
+writeString :: RWParameters  -> Trie String -> String
+            -> (Trie String,String -> String)
 writeString (RWParameters  sLen aLen) strs s
   | isStub s = (strs,showChar ';' . (showString s . showChar '"'))
   | otherwise
@@ -372,7 +374,7 @@ writeString (RWParameters  sLen aLen) strs s
       Just i -> (strs,showString i . showChar ';')
       Nothing ->
         let coding = intToASCII aLen (RW.Trie.size strs)
-        in (RW.Trie.insert s coding strs,showString coding . showChar ';')
+        in (RW.Trie.insert s coding strs, showString coding . showChar ';')
   where
     isStub str =
       length str < sLen && not (elem '"' str) && not (containsNewline str)
