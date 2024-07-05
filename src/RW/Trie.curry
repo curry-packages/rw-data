@@ -1,7 +1,10 @@
+------------------------------------------------------------------------------
 --- A simple trie data structure.
 --- 
---- This implementation assumes that the keys are small. It's not (yet) optimized for arbitrary keys. 
---- That is, no optimizations are done in regards to memory usage (or access speed) when using different keys with unique prefixes.
+--- This implementation assumes that the keys are small. It is not (yet)
+--- optimized for arbitrary keys. 
+--- That is, no optimizations are done in regards to memory usage
+--- (or access speed) when using different keys with unique prefixes.
 ---
 --- Consider a Trie containing the keys a,b,c,aa,ab,ac:
 ---          root 
@@ -22,9 +25,12 @@
 ---               l
 ---               |
 ---               ...
---- This is an issue because lots of nodes without associated values are created (only the leaf nodes a,b,d have values). 
+--- This is an issue because lots of nodes without associated values are created
+--- (only the leaf nodes a,b,d have values). 
 ---
 --- @author Lasse Züngel
+--- @version July 2024
+------------------------------------------------------------------------------
 
 module RW.Trie 
   (
@@ -91,21 +97,26 @@ fromList = foldr (uncurry insert) empty
 --- Converts a trie into a list of key-value pairs.
 toList :: Trie a -> [(String, a)]
 toList (Trie _ v ts) = case v of
-  Nothing -> concatMap (\(c, t) -> map (\(s, v) -> (c:s, v)) (toList t)) ts
-  Just v  -> ("", v) : concatMap (\(c, t) -> map (\(s, v) -> (c:s, v)) (toList t)) ts
+  Nothing -> concatMap (\(c, t) -> map (\(s, w) -> (c:s, w)) (toList t)) ts
+  Just z  -> ("", z) :
+             concatMap (\(c, t) -> map (\(s, w) -> (c:s, w)) (toList t)) ts
 
 -------- tests
 
-alphabet = ['a'..'z'] 
+alphabet :: [Char]
+alphabet = ['a'..'z']
+
+sizeAlphabet :: Int
 sizeAlphabet = 26
 
 toKey :: Int -> String
 toKey n | n < 0            = error "toKey: negative number"
         | n < sizeAlphabet = [alphabet !! n]
-        | otherwise = toKey (n `div` sizeAlphabet) ++ toKey (n `mod` sizeAlphabet)
-  where
-    toChar n = toEnum (n + fromEnum 'a')
+        | otherwise        = toKey (n `div` sizeAlphabet) ++
+                             toKey (n `mod` sizeAlphabet)
 
+{-
+-- Tests:
 keys = map toKey [0..1000]
 
 input = zip keys [0..]
@@ -138,3 +149,4 @@ sumAllMap list = sum $ map (lMap list) keys
 tt = sumAllT myList  --  150ms (kics2, n=10000) -  520ms (pakcs, n=1000)
 tp = sumAllP input   -- 3150ms (kics2         ) - 1750ms (pakcs        )
 tm = sumAllMap myMap --  280ms (kics2         ) -  930ms (pakcs        )
+-}

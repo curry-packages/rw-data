@@ -5,8 +5,9 @@
 --- defined in the prelude.
 ---
 --- @author Lasse Züngel
---- @version June 2024
+--- @version July 2024
 ------------------------------------------------------------------------------
+{-# OPTIONS_FRONTEND -Wno-incomplete-patterns -Wno-unused-bindings #-}
 
 module RW.Base
   ( ReadWrite(..), RWParameters (..), defaultParams, RWType(..), monoRWType
