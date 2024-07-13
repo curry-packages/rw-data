@@ -59,17 +59,20 @@ main = do
                           , benchmark     FCY.benchmarkReadRW       3   "FCY with rw-data" 
                           , benchmarkCold FCY.benchmarkReadP        1   "FCY with Prelude"
                           , benchmark     FCY.benchmarkReadRST      3   "FCY with ReadShowTerm"
+                          , interlude     FCY.cleanupFCYBenchmark       "Cleaning up FCY benchmarks..."
 
                           , interlude     FCY.initParamBenchmark                  "Initializing parameterized FCY benchmarks..."
                           , benchmark     FCY.benchmarkParamNoStringExtraction 3  "No string extraction"
                           , benchmark     FCY.benchmarkParamNoStringInlining   3  "No string inlining"
                           , benchmark     FCY.benchmarkParamSmallAlphabet      3  "alphabet size 10 (vs 26)"
                           , benchmark     FCY.benchmarkParamBigAlphabet        3  "alphabet size 94 (vs 26)"
+                          , interlude     FCY.cleanupParamBenchmark               "Cleaning up parameter benchmarks..." 
 
                           , interlude     FCYC.initFCYBenchmark         "Preparing container parameters (list, map, trie)..."
                           , benchmark     FCYC.benchmarkReadRWList   3  "FCY with parametrized containers: list" 
                           , benchmark     FCYC.benchmarkReadRWMap    3  "FCY with parametrized containers: map" 
                           , benchmark     FCYC.benchmarkReadRWTrie   3  "FCY with parametrized containers: trie" 
+                          , interlude     FCYC.cleanupFCYBenchmark      "Cleaning up container benchmarks..." 
 
                           , interlude     peanoBench                    "Initializing Peano benchmarks..."
                           , benchmark     Peano.benchmarkReadRW     3   "Peano with rw-data"

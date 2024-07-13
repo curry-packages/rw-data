@@ -43,6 +43,8 @@ Run time:     362ms per run. Total for 3 runs: 1087ms
 Elapsed time: 495ms per run. Total for 3 runs: 1485ms
 GCs:          9 per run. Total for 3 runs: 28
 
+Cleaning up FCY benchmarks...
+
 Initializing parameterized FCY benchmarks...
 
 Running benchmark "No string extraction":
@@ -69,6 +71,8 @@ Run time:     817ms per run. Total for 3 runs: 2451ms
 Elapsed time: 983ms per run. Total for 3 runs: 2950ms
 GCs:          12 per run. Total for 3 runs: 37
 
+Cleaning up parameter benchmarks...
+
 Preparing container parameters (list, map, trie)...
 
 Running benchmark "FCY with parametrized containers: list":
@@ -88,6 +92,8 @@ Running benchmark "FCY with parametrized containers: trie":
 Run time:     607ms per run. Total for 3 runs: 1822ms
 Elapsed time: 746ms per run. Total for 3 runs: 2238ms
 GCs:          15 per run. Total for 3 runs: 46
+
+Cleaning up container benchmarks...
 
 Initializing Peano benchmarks...
 
@@ -155,6 +161,8 @@ Run time:     94ms per run. Total for 30 runs: 2826ms
 Elapsed time: 94ms per run. Total for 30 runs: 2820ms
 GCs:          106 per run. Total for 30 runs: 3201
 
+Cleaning up FCY benchmarks...
+
 Initializing parameterized FCY benchmarks...
 
 Running benchmark "No string extraction":
@@ -181,6 +189,8 @@ Run time:     13ms per run. Total for 30 runs: 410ms
 Elapsed time: 13ms per run. Total for 30 runs: 410ms
 GCs:          17 per run. Total for 30 runs: 526
 
+Cleaning up parameter benchmarks...
+
 Preparing container parameters (list, map, trie)...
 
 Running benchmark "FCY with parametrized containers: list":
@@ -200,6 +210,8 @@ Running benchmark "FCY with parametrized containers: trie":
 Run time:     12ms per run. Total for 30 runs: 364ms
 Elapsed time: 12ms per run. Total for 30 runs: 363ms
 GCs:          13 per run. Total for 30 runs: 414
+
+Cleaning up container benchmarks...
 
 Initializing Peano benchmarks...
 

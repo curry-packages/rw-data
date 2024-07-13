@@ -5,6 +5,7 @@ import ReadShowTerm
 import Test.Prop
 
 import System.Process ( system )
+import System.Directory ( removeFile )
 
 import MyFlatCurry.Types
 import MyFlatCurry.TypesRW
@@ -20,32 +21,39 @@ initParamBenchmark :: IO ()
 initParamBenchmark = do
   flat <- readFile "MyFlatCurry/Example.fcy"
   let prog = (readUnqualifiedTerm ["Prelude", "MyFlatCurry.Types"] flat :: Prog)
-  writeDataFileP (RWParameters  1000 26) "MyFlatCurry/.curry/paramNoStringExtraction.rw" prog
-  writeDataFileP (RWParameters  0 26) "MyFlatCurry/.curry/paramNoStringInlining.rw" prog
-  writeDataFileP (RWParameters  5 10) "MyFlatCurry/.curry/paramSmallAlphabet.rw" prog
-  writeDataFileP (RWParameters  5 94) "MyFlatCurry/.curry/paramBigAlphabet.rw" prog
+  writeDataFileP (RWParameters  1000 26) "MyFlatCurry/paramNoStringExtraction.rw" prog
+  writeDataFileP (RWParameters  0 26)    "MyFlatCurry/paramNoStringInlining.rw"   prog
+  writeDataFileP (RWParameters  5 10)    "MyFlatCurry/paramSmallAlphabet.rw"      prog
+  writeDataFileP (RWParameters  5 94)    "MyFlatCurry/paramBigAlphabet.rw"        prog
+
+cleanupParamBenchmark :: IO ()
+cleanupParamBenchmark = do
+  mapM_ removeFile ["MyFlatCurry/paramNoStringExtraction.rw", 
+                    "MyFlatCurry/paramNoStringInlining.rw", 
+                    "MyFlatCurry/paramSmallAlphabet.rw", 
+                    "MyFlatCurry/paramBigAlphabet.rw"]
   
 benchmarkParamNoStringExtraction :: IO ()
 benchmarkParamNoStringExtraction = do
-  flat <- readFile "MyFlatCurry/.curry/paramNoStringExtraction.rw"
+  flat <- readFile "MyFlatCurry/paramNoStringExtraction.rw"
   let prog = readData flat :: Maybe Prog
   normalform_ prog
 
 benchmarkParamNoStringInlining :: IO ()
 benchmarkParamNoStringInlining = do
-  flat <- readFile "MyFlatCurry/.curry/paramNoStringInlining.rw"
+  flat <- readFile "MyFlatCurry/paramNoStringInlining.rw"
   let prog = readData flat :: Maybe Prog
   normalform_ prog
 
 benchmarkParamSmallAlphabet :: IO ()
 benchmarkParamSmallAlphabet = do
-  flat <- readFile "MyFlatCurry/.curry/paramSmallAlphabet.rw"
+  flat <- readFile "MyFlatCurry/paramSmallAlphabet.rw"
   let prog = readData flat :: Maybe Prog
   normalform_ prog
 
 benchmarkParamBigAlphabet :: IO ()
 benchmarkParamBigAlphabet = do
-  flat <- readFile "MyFlatCurry/.curry/paramBigAlphabet.rw"
+  flat <- readFile "MyFlatCurry/paramBigAlphabet.rw"
   let prog = readData flat :: Maybe Prog
   normalform_ prog
 
@@ -57,6 +65,9 @@ initFCYBenchmark = do
   flat <- readFile "MyFlatCurry/Example.fcy"
   writeDataFile "MyFlatCurry/Example.rw"
     (readUnqualifiedTerm ["Prelude", "MyFlatCurry.Types"] flat :: Prog)
+
+cleanupFCYBenchmark :: IO ()
+cleanupFCYBenchmark = removeFile "MyFlatCurry/Example.rw"
 
 -- PAKCS:
 -- elapsed pakcs (map):  1940ms
