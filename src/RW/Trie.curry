@@ -71,11 +71,11 @@ size :: Trie a -> Int
 size (Trie s _ _) = s
 
 --- A singleton trie.
-singleton :: Eq a => String -> a -> Trie a
+singleton :: String -> a -> Trie a
 singleton str v = insert str v empty
 
 --- Inserts a value into the trie.
-insert :: Eq a => String -> a -> Trie a -> Trie a
+insert :: String -> a -> Trie a -> Trie a
 insert []     v (Trie s _ ts) = Trie (s+1) (Just v) ts
 insert (c:cs) v (Trie s v' ts) = case Prelude.lookup c ts of
   Nothing -> Trie (s+1) v' ((c, insert cs v empty) : ts)
@@ -89,7 +89,7 @@ lookup (c:cs) (Trie _ _ ts) = case Prelude.lookup c ts of
   Just t  -> RW.Trie.lookup cs t
 
 --- Converts a list of key-value pairs into a trie.
-fromList :: Eq a =>  [(String, a)] -> Trie a
+fromList :: [(String, a)] -> Trie a
 fromList = foldr (uncurry insert) empty
 
 --- Converts a trie into a list of key-value pairs.
