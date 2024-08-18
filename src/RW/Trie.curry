@@ -93,6 +93,8 @@ fromList :: [(String, a)] -> Trie a
 fromList = foldr (uncurry insert) empty
 
 --- Converts a trie into a list of key-value pairs.
+--- 
+--- Note that no guarantees are made about the order of the elements in the list.
 toList :: Trie a -> [(String, a)]
 toList (Trie _ v ts) = case v of
   Nothing -> concatMap (\(c, t) -> map (\(s, w) -> (c:s, w)) (toList t)) ts
@@ -100,7 +102,7 @@ toList (Trie _ v ts) = case v of
              concatMap (\(c, t) -> map (\(s, w) -> (c:s, w)) (toList t)) ts
 
 {-
--------- tests
+-------- Benchmarks
 
 alphabet :: [Char]
 alphabet = ['a'..'z']

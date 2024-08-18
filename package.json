@@ -20,7 +20,7 @@
     "This package implements a compact and fast data term representation, used to write data to files and read data from files.",
     "testsuite" : {
     "src-dir": "tests",
-    "modules": ["TypeIO.Tests", "Handle.Tests", "MyFlatCurry.Tests", "Peano.Tests"]
+    "modules": ["TypeIO.Tests", "Handle.Tests", "MyFlatCurry.Tests", "Peano.Tests", "Trie.Tests"]
   },
   "source": {
     "git": "https://github.com/curry-packages/rw-data.git",
