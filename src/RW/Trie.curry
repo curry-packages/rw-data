@@ -6,7 +6,7 @@
 --- That is, no optimizations are done in regards to memory usage
 --- (or access speed) when using different keys with unique prefixes.
 ---
---- Consider a Trie containing the keys a,b,c,aa,ab,ac:
+--- Consider a Trie containing the keys `a,b,c,aa,ab,ac`:
 ---          root 
 ---         / | \
 ---        /  |  \
@@ -14,7 +14,7 @@
 ---     / | \    
 ---    a  b  c
 ---
---- This is fine. Now consider a Trie containing the keys a,b,Helloworld
+--- This is fine. Now consider a Trie containing the keys `a,b,Helloworld`:
 ---          root
 ---         / | \
 ---        /  |  \
@@ -26,7 +26,7 @@
 ---               |
 ---               ...
 --- This is an issue because lots of nodes without associated values are created
---- (only the leaf nodes a,b,d have values). 
+--- (only the leaf nodes `a,b,d` have values). 
 ---
 --- @author Lasse Züngel
 --- @version July 2024
@@ -48,8 +48,6 @@ module RW.Trie
 
 import Data.List
 import Data.Maybe
-
-import qualified Data.Map
 
 --- The size of a trie
 type Size = Int
@@ -77,7 +75,7 @@ singleton :: Eq a => String -> a -> Trie a
 singleton str v = insert str v empty
 
 --- Inserts a value into the trie.
-insert :: Prelude.Eq a => String -> a -> Trie a -> Trie a
+insert :: Eq a => String -> a -> Trie a -> Trie a
 insert []     v (Trie s _ ts) = Trie (s+1) (Just v) ts
 insert (c:cs) v (Trie s v' ts) = case Prelude.lookup c ts of
   Nothing -> Trie (s+1) v' ((c, insert cs v empty) : ts)
@@ -101,6 +99,7 @@ toList (Trie _ v ts) = case v of
   Just z  -> ("", z) :
              concatMap (\(c, t) -> map (\(s, w) -> (c:s, w)) (toList t)) ts
 
+{-
 -------- tests
 
 alphabet :: [Char]
@@ -115,7 +114,6 @@ toKey n | n < 0            = error "toKey: negative number"
         | otherwise        = toKey (n `div` sizeAlphabet) ++
                              toKey (n `mod` sizeAlphabet)
 
-{-
 -- Tests:
 keys = map toKey [0..1000]
 
