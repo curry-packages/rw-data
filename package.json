@@ -1,6 +1,6 @@
 {
   "name": "rw-data",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "author": "Lasse Zuengel <stu226842@mail.uni-kiel.de>",
   "maintainer": "Michael Hanus <mh@informatik.uni-kiel.de>",
   "synopsis": "Base operations to support reading and writing data in a compact (string) representation",
