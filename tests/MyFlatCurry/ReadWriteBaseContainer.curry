@@ -14,7 +14,7 @@ import Text.Show
 
 import Prelude hiding (ShowS, showString, showChar, shows)
 
-import RW.Trie 
+import Data.Trie as T
 
 import Debug.Trace
 
@@ -23,9 +23,9 @@ import Control.Search.Unsafe (oneValue)
 class ReadWrite a where
   readRW :: Container c => c -> String -> (a,String)
 
-  showRW :: RWParameters  -> RW.Trie.Trie String -> a -> (RW.Trie.Trie String, Text.Show.ShowS)
+  showRW :: RWParameters  -> T.Trie String -> a -> (T.Trie String, Text.Show.ShowS)
 
-  writeRW :: RWParameters  -> System.IO.Handle -> a -> RW.Trie.Trie String -> IO (RW.Trie.Trie String)
+  writeRW :: RWParameters  -> System.IO.Handle -> a -> T.Trie String -> IO (T.Trie String)
 
   -- Returns the type of the value.
   typeOf :: a -> RWType
@@ -37,14 +37,14 @@ class ReadWrite a where
       (x,r1) = readRW strs cs
       (xs,r2) = readListRW strs r1
 
-  showListRW :: RWParameters  -> RW.Trie.Trie String -> [a] -> (RW.Trie.Trie String,ShowS)
+  showListRW :: RWParameters  -> T.Trie String -> [a] -> (T.Trie String,ShowS)
   showListRW _      strs [] = (strs,showString "0")
   showListRW params strs (x : xs) = (strs'',showString "1" . x' . xs')
     where
       (strs',x') = showRW params strs x
       (strs'',xs') = showListRW params strs' xs
 
-  writeListRW :: RWParameters  -> System.IO.Handle -> [a] -> RW.Trie.Trie String -> IO (RW.Trie.Trie String)
+  writeListRW :: RWParameters  -> System.IO.Handle -> [a] -> T.Trie String -> IO (T.Trie String)
   writeListRW _      h [] strs = System.IO.hPutStr h "0" >> return strs
   writeListRW params h (x : xs) strs =
     System.IO.hPutStr h "1" >> writeRW params h x strs >>= writeListRW params h xs
@@ -250,12 +250,12 @@ instance Container MapString where
   contToList (MapString m)      = Data.Map.toList m
 
 instance Container TrieString where
-  contEmpty                     = TrieString RW.Trie.empty
-  contInsert k v (TrieString m) = TrieString (RW.Trie.insert k v m)
-  contLookup k (TrieString m)   = RW.Trie.lookup k m
-  contSize (TrieString m)       = RW.Trie.size m
-  contFromList xs               = TrieString (RW.Trie.fromList xs)
-  contToList (TrieString m)     = RW.Trie.toList m
+  contEmpty                     = TrieString T.empty
+  contInsert k v (TrieString m) = TrieString (T.insert k v m)
+  contLookup k (TrieString m)   = T.lookup k m
+  contSize (TrieString m)       = T.size m
+  contFromList xs               = TrieString (T.fromList xs)
+  contToList (TrieString m)     = T.toList m
 
 -- Reads an integer.
 readInt :: String -> Int
@@ -321,15 +321,15 @@ intToASCII lc n
 -- Shows a string. 
 -- 
 -- If the string is long, it is extracted and represented only once. Otherwise, it is inlined.
-writeString :: RWParameters  -> RW.Trie.Trie String -> String -> (RW.Trie.Trie String, String -> String)
+writeString :: RWParameters  -> T.Trie String -> String -> (T.Trie String, String -> String)
 writeString (RWParameters  sLen aLen _) strs s
   | isStub s = (strs,showChar ';' . (showString s . showChar '"'))
   | otherwise
-  = case RW.Trie.lookup s strs of
+  = case T.lookup s strs of
       Just i -> (strs,showString i . showChar ';')
       Nothing ->
-        let coding = intToASCII aLen (RW.Trie.size strs)
-        in (RW.Trie.insert s coding strs,showString coding . showChar ';')
+        let coding = intToASCII aLen (T.size strs)
+        in (T.insert s coding strs,showString coding . showChar ';')
   where
     isStub str =
       lengthBelow str sLen && ((not $ elem '"' str) && (not $ containsNewline str))
@@ -394,7 +394,7 @@ writeDataFileP params file x =
   do h <- System.IO.openFile file System.IO.WriteMode
      System.IO.hPutStr h (show (alphabetLen params) ++ " " ++ (show (container params)) ++ "\n")
      System.IO.hPutStr h (ppType (typeOf x) ++ "\n")
-     written <- RW.Trie.toList <$> writeRW params h x (RW.Trie.empty)
+     written <- T.toList <$> writeRW params h x (T.empty)
      System.IO.hPutStr h "\n"
      let strs = keysOrdByVal written
      mapM_ (System.IO.hPutStr h) (map outputStr strs)
@@ -429,8 +429,8 @@ showData = showDataP defaultParams
 showDataP :: ReadWrite a => RWParameters  -> a -> String
 showDataP params x = (show (alphabetLen params) ++ " " ++ show (container params) ++ "\n") ++ (ppType (typeOf x) ++ "\n") ++ (l ++ "\n") ++ concatMap outputStr (keysOrdByVal ls)
   where
-    (ls,l) = let (ls', l') = showRW params (RW.Trie.empty) x
-             in (RW.Trie.toList ls', l' "")
+    (ls,l) = let (ls', l') = showRW params (T.empty) x
+             in (T.toList ls', l' "")
 
 outputStr :: String -> String
 outputStr s

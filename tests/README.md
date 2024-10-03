@@ -18,7 +18,7 @@ Using the following system:
 The benchmarks output is as follows:
 
 
-PAKCS:
+PAKCS (sicstus-4.8.0):
 ```
 Running benchmarks
 ==================
