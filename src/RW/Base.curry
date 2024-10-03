@@ -22,7 +22,7 @@ import Text.Show
 
 import Prelude hiding (ShowS, showString, showChar, shows)
 
-import RW.Trie 
+import Data.Trie as T 
 
 ------------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ instance ReadWrite Char where
 
   readListRW strs cs =
     case index of
-      (_:_) -> (Data.Maybe.fromJust $ RW.Trie.lookup index strs,r)
+      (_:_) -> (Data.Maybe.fromJust $ T.lookup index strs,r)
       []    -> readStubString strs r
     where
       (index,r) = readStringId cs :: (String,String)
@@ -371,11 +371,11 @@ writeString :: RWParameters  -> Trie String -> String
 writeString (RWParameters  sLen aLen) strs s
   | isStub s = (strs,showChar ';' . (showString s . showChar '"'))
   | otherwise
-  = case RW.Trie.lookup s strs of
+  = case T.lookup s strs of
       Just i -> (strs,showString i . showChar ';')
       Nothing ->
-        let coding = intToASCII aLen (RW.Trie.size strs)
-        in (RW.Trie.insert s coding strs, showString coding . showChar ';')
+        let coding = intToASCII aLen (T.size strs)
+        in (T.insert s coding strs, showString coding . showChar ';')
   where
     isStub str =
       length str < sLen && not (elem '"' str) && not (containsNewline str)
@@ -426,7 +426,7 @@ containsNewline :: String -> Bool
 containsNewline s = elem '\n' s || elem '\r' s
 
 keysOrdByVal :: Trie String -> [String]
-keysOrdByVal m = map fst (Data.List.sortBy ordHex $ RW.Trie.toList m)
+keysOrdByVal m = map fst (Data.List.sortBy ordHex $ T.toList m)
  where
   ordHex :: Ord b => (a,[b]) -> (c,[b]) -> Bool
   ordHex (_,a) (_,b)
@@ -457,7 +457,7 @@ readData ls =
       else Nothing
  where
   calc (sLen,_,encoding,strings) =
-    readRW (RW.Trie.fromList $ zip (map (intToASCII sLen) (enumFrom 0)) strings)
+    readRW (T.fromList $ zip (map (intToASCII sLen) (enumFrom 0)) strings)
            encoding
 
 --- Reads a file containing a compact data representation,
@@ -481,7 +481,7 @@ writeDataFileP params file x =
   do h <- openFile file WriteMode
      hPutStr h (show (alphabetLen params) ++ "\n")
      hPutStr h (ppType (typeOf x) ++ "\n")
-     written <- writeRW params h x RW.Trie.empty
+     written <- writeRW params h x T.empty
      hPutStr h "\n"
      let strs = keysOrdByVal written
      mapM_ (hPutStr h) (map outputStr strs)
@@ -522,4 +522,4 @@ showDataP params x =
   (ppType (typeOf x) ++ "\n") ++ (l "" ++ "\n") ++
   concatMap outputStr (keysOrdByVal ls)
  where
-  (ls,l) = showRW params RW.Trie.empty x
+  (ls,l) = showRW params T.empty x

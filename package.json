@@ -13,14 +13,15 @@
       "read-legacy"   : ">= 3.0.0, < 4.0.0",
       "process"       : ">= 3.0.0, < 4.0.0",
       "profiling"     : ">= 3.0.0, < 4.0.0",
-      "directory"     : ">= 3.0.0, < 4.0.0"
+      "directory"     : ">= 3.0.0, < 4.0.0",
+      "string-trie"   : "< 1.0.0"
   },
   "exportedModules": [ "RW.Base" ],
   "description": 
     "This package implements a compact and fast data term representation, used to write data to files and read data from files.",
     "testsuite" : {
     "src-dir": "tests",
-    "modules": ["TypeIO.Tests", "Handle.Tests", "MyFlatCurry.Tests", "Peano.Tests", "Trie.Tests"]
+    "modules": ["TypeIO.Tests", "Handle.Tests", "MyFlatCurry.Tests", "Peano.Tests"]
   },
   "source": {
     "git": "https://github.com/curry-packages/rw-data.git",
