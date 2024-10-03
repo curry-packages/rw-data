@@ -14,11 +14,10 @@ module RW.Base
   , readDataFile, writeDataFile, writeDataFileP, readData, showData, showDataP)
  where
 
-import Data.Maybe
-import Data.List
-import Data.Map
-import System.IO
-import Text.Show
+import Data.Maybe ( fromJust )
+import Data.List  ( intercalate, sortBy )
+import System.IO  ( Handle, IOMode(WriteMode), hClose, hPutChar, hPutStr, openFile )
+import Text.Show  ( ShowS, showChar, showString, shows )
 
 import Prelude hiding (ShowS, showString, showChar, shows)
 
@@ -29,30 +28,30 @@ import Data.Trie as T
 --- The class `ReadWrite` contains the interface to be implemented
 --- by compact readers and writers of data.
 class ReadWrite a where
-  readRW :: Trie String -> String -> (a,String)
+  readRW :: Trie String -> String -> (a, String)
 
-  showRW :: RWParameters  -> Trie String -> a -> (Trie String,Text.Show.ShowS)
+  showRW :: RWParameters -> Trie String -> a -> (Trie String, ShowS)
 
-  writeRW :: RWParameters  -> Handle -> a -> Trie String -> IO (Trie String)
+  writeRW :: RWParameters -> Handle -> a -> Trie String -> IO (Trie String)
 
   --- Returns the type of the value.
   typeOf :: a -> RWType
 
-  readListRW :: Trie String -> String -> ([a],String)
-  readListRW _    ('0' : cs) = ([],cs)
-  readListRW strs ('1' : cs) = (x : xs,r2)
+  readListRW :: Trie String -> String -> ([a], String)
+  readListRW _    ('0' : cs) = ([], cs)
+  readListRW strs ('1' : cs) = (x : xs, r2)
     where
       (x,r1) = readRW strs cs
       (xs,r2) = readListRW strs r1
 
   showListRW :: RWParameters  -> Trie String -> [a] -> (Trie String,ShowS)
-  showListRW _      strs [] = (strs,showString "0")
-  showListRW params strs (x : xs) = (strs'',showString "1" . x' . xs')
+  showListRW _      strs []       = (strs,   showString "0")
+  showListRW params strs (x : xs) = (strs'', showString "1" . x' . xs')
     where
       (strs',x') = showRW params strs x
       (strs'',xs') = showListRW params strs' xs
 
-  writeListRW :: RWParameters  -> Handle -> [a] -> Trie String -> IO (Trie String)
+  writeListRW :: RWParameters -> Handle -> [a] -> Trie String -> IO (Trie String)
   writeListRW _      h [] strs = hPutStr h "0" >> return strs
   writeListRW params h (x : xs) strs =
     hPutStr h "1" >> writeRW params h x strs >>= writeListRW params h xs
@@ -65,7 +64,7 @@ instance ReadWrite Int where
     where
       (n,_ : r) = span (flip (/=) ';') cs
       
-  showRW _ strs n = (strs,shows n . showString ";")
+  showRW _ strs n = (strs, shows n . showString ";")
 
   writeRW _ h n strs = hPutStr h (show n ++ ";") >> return strs
 
@@ -78,7 +77,7 @@ instance ReadWrite Float where
 
   showRW _ strs n = (strs,shows n . showString ";")
 
-  writeRW _ h n strs = do hPutStr h (show n ++ ";") >> return strs
+  writeRW _ h n strs = hPutStr h (show n ++ ";") >> return strs
 
   typeOf _ = monoRWType "Float"
 
@@ -98,13 +97,13 @@ instance ReadWrite Char where
         '\\' : cs1 -> ('\\',cs1)
         _ -> error "Invalid escape sequence"
 
-  showRW _ strs c = (strs,showString $ escapeChar c)
+  showRW _ strs c = (strs, showString $ escapeChar c)
 
   writeRW _ h c strs = do hPutStr h (escapeChar c) >> return strs
 
   readListRW strs cs =
     case index of
-      (_:_) -> (Data.Maybe.fromJust $ T.lookup index strs,r)
+      (_:_) -> (fromJust $ T.lookup index strs, r)
       []    -> readStubString strs r
     where
       (index,r) = readStringId cs :: (String,String)
@@ -122,16 +121,15 @@ instance ReadWrite Char where
 
   typeOf _ = monoRWType "Char"
 
-
 instance ReadWrite Bool where
   readRW strs ('0' : r0) = (False,r0)
   readRW strs ('1' : r0) = (True,r0)
 
   showRW params strs0 False = (strs0,showChar '0')
-  showRW params strs0 True = (strs0,showChar '1')
+  showRW params strs0 True  = (strs0,showChar '1')
 
   writeRW params h False strs = hPutChar h '0' >> return strs
-  writeRW params h True strs = hPutChar h '1' >> return strs
+  writeRW params h True  strs = hPutChar h '1' >> return strs
 
   typeOf _ = monoRWType "Bool"
 
@@ -148,7 +146,6 @@ instance ReadWrite a => ReadWrite [a] where
       get_a' :: [a'] -> a'
       get_a' _ = failed 
 
-
 --- `ReadWrite` instance for `Either` types.
 instance (ReadWrite a,ReadWrite b) => ReadWrite (Either a b) where
   readRW strs ('0' : r0) = (Left a',r1)
@@ -158,16 +155,15 @@ instance (ReadWrite a,ReadWrite b) => ReadWrite (Either a b) where
     where
       (a',r1) = readRW strs r0
 
-  showRW params strs0 (Left a') = (strs1,showChar '0' . show1)
+  showRW params strs0 (Left a') = (strs1, showChar '0' . show1)
     where
       (strs1,show1) = showRW params strs0 a'
-  showRW params strs0 (Right a') = (strs1,showChar '1' . show1)
+  showRW params strs0 (Right a') = (strs1, showChar '1' . show1)
     where
       (strs1,show1) = showRW params strs0 a'
 
-  writeRW params h (Left a') strs = hPutChar h '0' >> writeRW params h a' strs
-  writeRW params h (Right a') strs =
-    hPutChar h '1' >> writeRW params h a' strs
+  writeRW params h (Left a')  strs = hPutChar h '0' >> writeRW params h a' strs
+  writeRW params h (Right a') strs = hPutChar h '1' >> writeRW params h a' strs
 
   typeOf n = RWType "Either" [typeOf (get_a n),typeOf (get_b n)]
     where
@@ -176,20 +172,19 @@ instance (ReadWrite a,ReadWrite b) => ReadWrite (Either a b) where
       get_b :: Either a' b' -> b'
       get_b _ = failed
 
-
 --- `ReadWrite` instance for `Maybe` types.
 instance ReadWrite a => ReadWrite (Maybe a) where
-  readRW strs ('0' : r0) = (Nothing,r0)
-  readRW strs ('1' : r0) = (Just a',r1)
+  readRW strs ('0' : r0) = (Nothing, r0)
+  readRW strs ('1' : r0) = (Just a', r1)
     where
       (a',r1) = readRW strs r0
 
-  showRW params strs0 Nothing = (strs0,showChar '0')
-  showRW params strs0 (Just a') = (strs1,showChar '1' . show1)
+  showRW params strs0 Nothing   = (strs0, showChar '0')
+  showRW params strs0 (Just a') = (strs1, showChar '1' . show1)
     where
       (strs1,show1) = showRW params strs0 a'
 
-  writeRW params h Nothing strs = hPutChar h '0' >> return strs
+  writeRW params h Nothing   strs = hPutChar h '0' >> return strs
   writeRW params h (Just a') strs = hPutChar h '1' >> writeRW params h a' strs
 
   typeOf n = RWType "Maybe" [typeOf (get_a n)]
@@ -197,16 +192,15 @@ instance ReadWrite a => ReadWrite (Maybe a) where
       get_a :: Maybe a' -> a'
       get_a _ = failed
 
-
 --- `ReadWrite` instance for type `Ordering`.
 instance ReadWrite Ordering where
-  readRW strs ('0' : r0) = (LT,r0)
-  readRW strs ('1' : r0) = (EQ,r0)
-  readRW strs ('2' : r0) = (GT,r0)
+  readRW strs ('0' : r0) = (LT, r0)
+  readRW strs ('1' : r0) = (EQ, r0)
+  readRW strs ('2' : r0) = (GT, r0)
 
-  showRW params strs0 LT = (strs0,showChar '0')
-  showRW params strs0 EQ = (strs0,showChar '1')
-  showRW params strs0 GT = (strs0,showChar '2')
+  showRW params strs0 LT = (strs0, showChar '0')
+  showRW params strs0 EQ = (strs0, showChar '1')
+  showRW params strs0 GT = (strs0, showChar '2')
 
   writeRW params h LT strs = hPutChar h '0' >> return strs
   writeRW params h EQ strs = hPutChar h '1' >> return strs
@@ -214,35 +208,34 @@ instance ReadWrite Ordering where
 
   typeOf _ = monoRWType "Ordering"
 
-
 --- `ReadWrite` instance for unit type.
 instance ReadWrite () where
-  readRW _ cs = ((),cs)
+  readRW _ cs = ((), cs)
 
-  showRW _ strs () = (strs,showString "")
+  showRW _ strs () = (strs, showString "")
 
   writeRW _ _ () strs = return strs
 
   typeOf _ = monoRWType "()"
 
 instance (ReadWrite a,ReadWrite b) => ReadWrite (a,b) where
-  readRW strs cs = ((x,y),r2)
+  readRW strs cs = ((x, y), r2)
     where
-      (x,r1) = readRW strs cs
-      (y,r2) = readRW strs r1
+      (x, r1) = readRW strs cs
+      (y, r2) = readRW strs r1
 
   showRW params strs (x,y) = (strs'',x' . y')
     where
-      (strs',x') = showRW params strs x
-      (strs'',y') = showRW params strs' y
+      (strs',  x') = showRW params strs  x
+      (strs'', y') = showRW params strs' y
 
-  writeRW params h (x,y) strs = writeRW params h x strs >>= writeRW params h y
+  writeRW params h (x, y) strs = writeRW params h x strs >>= writeRW params h y
 
   typeOf n = RWType "()" [typeOf $ get_a' n,typeOf $ get_b' n]
     where
-      get_a' :: (a',b') -> a'
+      get_a' :: (a', b') -> a'
       get_a' _ = failed 
-      get_b' :: (a',b') -> b'
+      get_b' :: (a', b') -> b'
       get_b' _ = failed
 
 instance (ReadWrite a,ReadWrite b,ReadWrite c) => ReadWrite (a,b,c) where
@@ -258,7 +251,8 @@ instance (ReadWrite a,ReadWrite b,ReadWrite c) => ReadWrite (a,b,c) where
       (strs'',y') = showRW params strs' y
       (strs''',z') = showRW params strs'' z
 
-  writeRW params h (x,y,z) strs = (writeRW params h x strs >>= writeRW params h y) >>= writeRW params h z
+  writeRW params h (x,y,z) strs = 
+    (writeRW params h x strs >>= writeRW params h y) >>= writeRW params h z
 
   typeOf n = RWType "()" [typeOf $ get_a' n,typeOf $ get_b' n,typeOf $ get_c' n]
     where
@@ -285,24 +279,27 @@ instance (ReadWrite a,ReadWrite b,ReadWrite c,ReadWrite d) => ReadWrite (a, b, c
       (strs'''',w') = showRW params strs''' w
 
   writeRW params h (x,y,z,w) strs =
-    writeRW params h x strs >>= writeRW params h y >>= writeRW params h z >>= writeRW params h w
+    writeRW params h x strs >>= writeRW params h y 
+                            >>= writeRW params h z 
+                            >>= writeRW params h w
 
-  typeOf n = RWType "()" [typeOf $ get_a' n,typeOf $ get_b' n,typeOf $ get_c' n,typeOf $ get_d' n]
+  typeOf n = RWType "()" [typeOf $ get_a' n, typeOf $ get_b' n,
+                          typeOf $ get_c' n, typeOf $ get_d' n]
     where
-      get_a' :: (a',b',c',d') -> a'
+      get_a' :: (a', b', c', d') -> a'
       get_a' _ = failed 
-      get_b' :: (a',b',c',d') -> b'
+      get_b' :: (a', b', c', d') -> b'
       get_b' _ = failed 
-      get_c' :: (a',b',c',d') -> c'
+      get_c' :: (a', b', c', d') -> c'
       get_c' _ = failed 
-      get_d' :: (a',b',c',d') -> d'
+      get_d' :: (a', b', c', d') -> d'
       get_d' _ = failed
 
 --- Reads an integer.
 readInt :: String -> Int
 readInt [] = error "readInt: empty string"
-readInt (c:cs) | c == '-' = -readInt' cs
-               | otherwise = readInt' (c:cs)
+readInt (c:cs) | c == '-'  = -readInt' cs
+               | otherwise =  readInt' (c:cs)
  where 
   readInt' = foldl (\n c1 -> n * 10 + (ord c1 - ord '0')) 0
 
@@ -366,8 +363,8 @@ intToASCII lc n
 --- 
 --- If the string is long, it is extracted and represented only once.
 --- Otherwise, it is inlined.
-writeString :: RWParameters  -> Trie String -> String
-            -> (Trie String,String -> String)
+writeString :: RWParameters -> Trie String -> String
+            -> (Trie String, String -> String)
 writeString (RWParameters  sLen aLen) strs s
   | isStub s = (strs,showChar ';' . (showString s . showChar '"'))
   | otherwise
@@ -426,7 +423,7 @@ containsNewline :: String -> Bool
 containsNewline s = elem '\n' s || elem '\r' s
 
 keysOrdByVal :: Trie String -> [String]
-keysOrdByVal m = map fst (Data.List.sortBy ordHex $ T.toList m)
+keysOrdByVal m = map fst (sortBy ordHex $ T.toList m)
  where
   ordHex :: Ord b => (a,[b]) -> (c,[b]) -> Bool
   ordHex (_,a) (_,b)
