@@ -40,5 +40,5 @@ Documentation
 The ideas and description of the compact data representation
 are described in the bachelor's thesis
 
-[Compact Representation of Data Terms](https://www.informatik.uni-kiel.de/~mh/lehre/abschlussarbeiten/bsc/Zuengel_Lasse.pdf)
+[Compact Representation of Data Terms](https://www.michaelhanus.de/lehre/abschlussarbeiten/bsc/Zuengel_Lasse.pdf)
 (in German, by Lasse Züngel, CAU Kiel, March 2024)
