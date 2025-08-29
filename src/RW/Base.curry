@@ -5,7 +5,7 @@
 --- defined in the prelude.
 ---
 --- @author Lasse Züngel
---- @version July 2024
+--- @version August 2025
 ------------------------------------------------------------------------------
 {-# OPTIONS_FRONTEND -Wno-incomplete-patterns -Wno-unused-bindings #-}
 
@@ -16,7 +16,8 @@ module RW.Base
 
 import Data.Maybe ( fromJust )
 import Data.List  ( intercalate, sortBy )
-import System.IO  ( Handle, IOMode(WriteMode), hClose, hPutChar, hPutStr, openFile )
+import System.IO  ( Handle, IOMode(..), hClose, hGetContents, hPutChar
+                  , hPutStr, openFile )
 import Text.Show  ( ShowS, showChar, showString, shows )
 
 import Prelude hiding (ShowS, showString, showChar, shows)
@@ -464,7 +465,7 @@ readData ls =
 --- `Nothing` is returned.
 readDataFile :: ReadWrite a => FilePath -> IO (Maybe a)
 readDataFile file = do
-  dt <- readFile file
+  dt <- openFile file ReadMode >>= hGetContents
   catch (return $ readData dt) (\_ -> return Nothing)
 
 --- Writes some data to a file containing a compact data representation.
